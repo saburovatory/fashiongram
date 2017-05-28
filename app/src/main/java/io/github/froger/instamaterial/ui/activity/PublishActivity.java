@@ -27,6 +27,7 @@ import java.net.URL;
 
 import butterknife.BindView;
 import butterknife.OnCheckedChanged;
+import io.github.froger.instamaterial.InstaMaterialApplication;
 import io.github.froger.instamaterial.R;
 import io.github.froger.instamaterial.Utils;
 
@@ -186,10 +187,12 @@ public class PublishActivity extends BaseActivity {
                 dos.flush();
                 dos.close();
 
+                InstaMaterialApplication myApp=(InstaMaterialApplication)getApplication();
+
                 try {
                     url = new URL("http://u0306965.plsk.regruhosting.ru/" +
                             "chat.php?action=insert" +
-                            "&author=Ruslan" +
+                            "&author=" + myApp.getUSer() +
                             "&text=" + etDescription.getText().toString().replace(' ', '+') +
                             "&img=/images/" + photoUri.getLastPathSegment());
 
