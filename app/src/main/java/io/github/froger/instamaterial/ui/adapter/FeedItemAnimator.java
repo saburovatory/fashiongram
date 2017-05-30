@@ -126,11 +126,6 @@ public class FeedItemAnimator extends DefaultItemAnimator {
         bounceAnimY.setInterpolator(OVERSHOOT_INTERPOLATOR);
         bounceAnimY.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationStart(Animator animation) {
-                holder.btnLike.setImageResource(R.drawable.ic_heart_red);
-            }
-
-            @Override
             public void onAnimationEnd(Animator animation) {
                 heartAnimationsMap.remove(holder);
                 dispatchChangeFinishedIfAllAnimationsEnded(holder);

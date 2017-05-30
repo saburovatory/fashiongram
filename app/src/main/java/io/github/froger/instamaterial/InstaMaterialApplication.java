@@ -15,7 +15,7 @@ public class InstaMaterialApplication extends Application {
         this.user = user;
     }
 
-    public String getUSer() {
+    public String getUser() {
         return this.user;
     }
 

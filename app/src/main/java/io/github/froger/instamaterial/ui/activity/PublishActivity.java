@@ -192,7 +192,7 @@ public class PublishActivity extends BaseActivity {
                 try {
                     url = new URL("http://u0306965.plsk.regruhosting.ru/" +
                             "chat.php?action=insert" +
-                            "&author=" + myApp.getUSer() +
+                            "&author=" + myApp.getUser() +
                             "&text=" + etDescription.getText().toString().replace(' ', '+') +
                             "&img=/images/" + photoUri.getLastPathSegment());
 

@@ -1,6 +1,5 @@
 package io.github.froger.instamaterial.ui.activity;
 
-import android.accounts.Account;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
@@ -277,7 +276,7 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
 
     public void showLikedSnackbar() {
         InstaMaterialApplication myApp = (InstaMaterialApplication) getApplication();
-        String username = myApp.getUSer();
+        String username = myApp.getUser();
         if (!username.equals("not_login"))
             Snackbar.make(clContent, "Liked!", Snackbar.LENGTH_SHORT).show();
         else

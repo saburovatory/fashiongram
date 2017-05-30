@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.content.Context;
 import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,14 +18,11 @@ import android.widget.ImageView;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,11 +35,11 @@ import io.github.froger.instamaterial.ui.activity.MainActivity;
 import io.github.froger.instamaterial.ui.view.LoadingFeedItemView;
 
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    public static final String ACTION_LIKE_BUTTON_CLICKED = "action_like_button_button";
-    public static final String ACTION_LIKE_IMAGE_CLICKED = "action_like_image_button";
+    private static final String ACTION_LIKE_BUTTON_CLICKED = "action_like_button_button";
+    static final String ACTION_LIKE_IMAGE_CLICKED = "action_like_image_button";
 
-    public static final int VIEW_TYPE_DEFAULT = 1;
-    public static final int VIEW_TYPE_LOADER = 2;
+    static final int VIEW_TYPE_DEFAULT = 1;
+    private static final int VIEW_TYPE_LOADER = 2;
 
     private final List<FeedItem> feedItems = new ArrayList<>();
 
@@ -58,14 +54,19 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.chatDBlocal = db;
     }
 
-    public class LikeLoading extends AsyncTask<Void, Void, Void> {
+    private class LikeLoading extends AsyncTask<Void, Void, Void> {
         String username;
         int postId;
 
-        public LikeLoading(int postId) {
+        LikeLoading(String username, int postId) {
+            this.username = username;
+            this.postId = postId;
+        }
+
+        LikeLoading(int postId) {
             if (context instanceof MainActivity) {
                 InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
-                this.username = myApp.getUSer();
+                this.username = myApp.getUser();
             }
             this.postId = postId;
         }
@@ -74,6 +75,42 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             try {
                 URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
                         "chat.php?action=insert_like" +
+                        "&post_id=" + postId +
+                        "&user=" + username);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(10000); // ждем 10сек
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                connection.connect();
+                connection.getResponseCode();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    private class LikeUnloading extends AsyncTask<Void, Void, Void> {
+        String username;
+        int postId;
+
+        LikeUnloading(String username, int postId) {
+            this.username = username;
+            this.postId = postId;
+        }
+
+        LikeUnloading(int postId) {
+            if (context instanceof MainActivity) {
+                InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
+                this.username = myApp.getUser();
+            }
+            this.postId = postId;
+        }
+
+        protected Void doInBackground(Void... urls) {
+            try {
+                URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
+                        "chat.php?action=delete_like" +
                         "&post_id=" + postId +
                         "&user=" + username);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -108,6 +145,27 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return null;
     }
 
+    private void like(CellFeedViewHolder holder, String action) {
+        int adapterPosition = holder.getAdapterPosition();
+        FeedItem item = feedItems.get(adapterPosition);
+        String username = ((InstaMaterialApplication)((MainActivity)context).getApplication())
+                .getUser();
+        if (!username.equals("not_login")) {
+            if (item.isLiked) {
+                item.isLiked = false;
+                feedItems.get(adapterPosition).likesCount--;
+            } else {
+                new LikeLoading(username, item.id).execute();
+                item.isLiked = true;
+                feedItems.get(adapterPosition).likesCount++;
+            }
+            notifyItemChanged(adapterPosition, action);
+        }
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).showLikedSnackbar();
+        }
+    }
+
     private void setupClickableViews(final View view, final CellFeedViewHolder cellFeedViewHolder) {
         cellFeedViewHolder.btnComments.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,38 +182,19 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cellFeedViewHolder.ivFeedCenter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int adapterPosition = cellFeedViewHolder.getAdapterPosition();
-                LikeLoading likeLoad = new LikeLoading(feedItems.get(adapterPosition).id);
-                if (!likeLoad.username.equals("not_login")) {
-                    likeLoad.execute();
-                    feedItems.get(adapterPosition).likesCount++;
-                    notifyItemChanged(adapterPosition, ACTION_LIKE_IMAGE_CLICKED);
-                }
-                if (context instanceof MainActivity) {
-                    ((MainActivity) context).showLikedSnackbar();
-                }
+                like(cellFeedViewHolder, ACTION_LIKE_IMAGE_CLICKED);
             }
         });
-
         cellFeedViewHolder.btnLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int adapterPosition = cellFeedViewHolder.getAdapterPosition();
-                LikeLoading likeLoad = new LikeLoading(feedItems.get(adapterPosition).id);
-                if (!likeLoad.username.equals("not_login")) {
-                    likeLoad.execute();
-                    feedItems.get(adapterPosition).likesCount++;
-                    notifyItemChanged(adapterPosition, ACTION_LIKE_BUTTON_CLICKED);
-                }
-                if (context instanceof MainActivity) {
-                    ((MainActivity) context).showLikedSnackbar();
-                }
+                like(cellFeedViewHolder, ACTION_LIKE_BUTTON_CLICKED);
             }
         });
         cellFeedViewHolder.ivUserProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onFeedItemClickListener.onProfileClick(view);
+//            onFeedItemClickListener.onProfileClick(view);
             }
         });
     }
@@ -244,13 +283,15 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             boolean isLiked = mLiked.getInt(0) > 0;
             mLiked.close();*/
 
-            feedItems.add(0, new FeedItem(count, false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(), hm.get("author").toString(), hm.get("text").toString()));
+            feedItems.add(0, new FeedItem(count, false, Integer.valueOf(hm.get("id").toString()),
+                    hm.get("img").toString(), hm.get("author").toString(), hm.get("text").toString()));
         } while (cursor.moveToNext());
         if (animated) {
             notifyItemRangeInserted(0, feedItems.size());
         } else {
             notifyDataSetChanged();
         }
+        cursor.close();
     }
 
     public void checkNewItems(boolean animated) {
@@ -361,7 +402,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         public void bindView(FeedItem feedItem) {
             this.feedItem = feedItem;
-            int adapterPosition = getAdapterPosition();
             new DownloadImageTask(ivFeedCenter).execute("http://u0306965.plsk.regruhosting.ru" + feedItem.path);
             tvAuthor.setText(feedItem.author);
             tvFeedBottom.setText(feedItem.text);
