@@ -83,7 +83,7 @@
                 android:layout_height="48dp"
                 android:background="@drawable/btn_feed_action"
                 android:src="@drawable/ic_comment_outline_grey"
-                android:visibility="invisible" />
+                android:visibility="visible" />
 
             <ImageButton
                 android:id="@+id/btnMore"
@@ -91,7 +91,7 @@
                 android:layout_height="48dp"
                 android:background="@drawable/btn_feed_action"
                 android:src="@drawable/ic_more_grey"
-                android:visibility="invisible" />
+                android:visibility="visible" />
 
             <LinearLayout
                 android:layout_width="0dp"
