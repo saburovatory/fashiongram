@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,16 +55,16 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.chatDBlocal = db;
     }
 
-    private class LikeLoading extends AsyncTask<Void, Void, Void> {
+    private class LikeAddition extends AsyncTask<Void, Void, Void> {
         String username;
         int postId;
 
-        LikeLoading(String username, int postId) {
+        LikeAddition(String username, int postId) {
             this.username = username;
             this.postId = postId;
         }
 
-        LikeLoading(int postId) {
+        LikeAddition(int postId) {
             if (context instanceof MainActivity) {
                 InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
                 this.username = myApp.getUser();
@@ -90,16 +91,16 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private class LikeUnloading extends AsyncTask<Void, Void, Void> {
+    private class LikeDeletion extends AsyncTask<Void, Void, Void> {
         String username;
         int postId;
 
-        LikeUnloading(String username, int postId) {
+        LikeDeletion(String username, int postId) {
             this.username = username;
             this.postId = postId;
         }
 
-        LikeUnloading(int postId) {
+        LikeDeletion(int postId) {
             if (context instanceof MainActivity) {
                 InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
                 this.username = myApp.getUser();
@@ -141,23 +142,23 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             );
             return new LoadingCellFeedViewHolder(view);
         }
-
         return null;
     }
 
     private void like(CellFeedViewHolder holder, String action) {
         int adapterPosition = holder.getAdapterPosition();
         FeedItem item = feedItems.get(adapterPosition);
-        String username = ((InstaMaterialApplication)((MainActivity)context).getApplication())
+        String username = ((InstaMaterialApplication)((MainActivity)this.context).getApplication())
                 .getUser();
         if (!username.equals("not_login")) {
             if (item.isLiked) {
                 item.isLiked = false;
-                feedItems.get(adapterPosition).likesCount--;
+                new LikeDeletion(username, item.id).execute();
+                item.likesCount--;
             } else {
-                new LikeLoading(username, item.id).execute();
                 item.isLiked = true;
-                feedItems.get(adapterPosition).likesCount++;
+                new LikeAddition(username, item.id).execute();
+                item.likesCount++;
             }
             notifyItemChanged(adapterPosition, action);
         }
@@ -170,12 +171,24 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cellFeedViewHolder.btnComments.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String username = ((InstaMaterialApplication)((MainActivity)context).getApplication())
+                        .getUser();
+                if (username.equals("not_login")) {
+                    ((MainActivity) context).showLikedSnackbar();
+                    return;
+                }
                 onFeedItemClickListener.onCommentsClick(view, cellFeedViewHolder.getAdapterPosition());
             }
         });
         cellFeedViewHolder.btnMore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String username = ((InstaMaterialApplication)((MainActivity)context).getApplication())
+                        .getUser();
+                if (username.equals("not_login")) {
+                    ((MainActivity)context).showLikedSnackbar();
+                    return;
+                }
                 onFeedItemClickListener.onMoreClick(v, cellFeedViewHolder.getAdapterPosition());
             }
         });
@@ -368,7 +381,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         FeedItem feedItem;
 
-        public CellFeedViewHolder(View view) {
+        CellFeedViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }

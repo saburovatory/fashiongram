@@ -74,13 +74,10 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
                     @Override
                     public void onComplete(VKResponse response) {
                         super.onComplete(response);
-
                         String status = "";
                         String first_name = "", last_name= "", screen_name = "";
                         try {
-
                             JSONObject jsonObject = response.json.getJSONObject("response");
-
                             first_name = jsonObject.getString("first_name");
                             last_name = jsonObject.getString("last_name");
                             screen_name = jsonObject.getString("screen_name");

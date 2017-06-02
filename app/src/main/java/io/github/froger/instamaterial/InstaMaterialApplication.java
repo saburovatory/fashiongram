@@ -7,8 +7,6 @@ import com.vk.sdk.VKSdk;
 import timber.log.Timber;
 
 public class InstaMaterialApplication extends Application {
-
-
     private String user;
 
     public void setUser(String user) {
