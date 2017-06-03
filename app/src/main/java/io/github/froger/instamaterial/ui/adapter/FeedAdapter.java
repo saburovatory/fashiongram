@@ -75,7 +75,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         protected Void doInBackground(Void... urls) {
             try {
                 URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
-                        "chat.php?action=insert_like" +
+                        "chat.php?action=like" +
                         "&post_id=" + postId +
                         "&user=" + username);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -111,7 +111,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         protected Void doInBackground(Void... urls) {
             try {
                 URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
-                        "chat.php?action=delete_like" +
+                        "chat.php?action=dislike" +
                         "&post_id=" + postId +
                         "&user=" + username);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
