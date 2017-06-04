@@ -86,6 +86,8 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
                             e.printStackTrace();
                         }
                         myApp.setUser(screen_name);
+                        feedAdapter.setUsername(screen_name);
+                        feedAdapter.loadLikes();
                     }
                 });
             }
@@ -97,6 +99,9 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
         })) {
             super.onActivityResult(requestCode, resultCode, data);
         }
+//        String username = ((InstaMaterialApplication)getApplication()).getUser();
+//        feedAdapter.setUsername(username);
+//        feedAdapter.loadLikes();
     }
 
     @Override
@@ -107,7 +112,7 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
         chatDBlocal = openOrCreateDatabase("chatDBlocal.db",
                 Context.MODE_PRIVATE, null);
         chatDBlocal
-                .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, client, data, text, img)");
+                .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, client, data, text, img, count)");
         chatDBlocal
                 .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id)");
 

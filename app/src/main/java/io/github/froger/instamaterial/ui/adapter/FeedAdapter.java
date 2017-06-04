@@ -1,5 +1,6 @@
 package io.github.froger.instamaterial.ui.adapter;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -44,6 +45,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<FeedItem> feedItems = new ArrayList<>();
 
+    private String username;
     private Context context;
     private SQLiteDatabase chatDBlocal;
     private OnFeedItemClickListener onFeedItemClickListener;
@@ -53,6 +55,29 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public FeedAdapter(Context context, SQLiteDatabase db) {
         this.context = context;
         this.chatDBlocal = db;
+        this.username = "not_login";
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void loadLikes() {
+        Cursor likedPhotos = chatDBlocal.rawQuery("SELECT DISTINCT post_id FROM likes WHERE user = '"
+                + username + "'", null);
+        if (likedPhotos == null)
+            return;
+        likedPhotos.moveToFirst();
+        for (int j = 0; j < likedPhotos.getCount(); j++) {
+            for (int i = 0; i < feedItems.size(); i++)
+                if (feedItems.get(i).id == likedPhotos.getInt(0)) {
+                    feedItems.get(i).isLiked = true;
+                    notifyItemChanged(i, ACTION_LIKE_BUTTON_CLICKED);
+                    break;
+                }
+            likedPhotos.moveToNext();
+        }
+        likedPhotos.close();
     }
 
     private class LikeAddition extends AsyncTask<Void, Void, Void> {
@@ -84,11 +109,20 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                 connection.connect();
                 connection.getResponseCode();
+
+                ContentValues new_mess = new ContentValues();
+                new_mess.put("user", username);
+                new_mess.put("post_id", postId);
+                chatDBlocal.insert("likes", null, new_mess);
+                new_mess.clear();
+                chatDBlocal.execSQL("UPDATE chat SET count = count + '1' WHERE _id = '" + postId +"'");
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return null;
+
         }
+
     }
 
     private class LikeDeletion extends AsyncTask<Void, Void, Void> {
@@ -120,9 +154,12 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                 connection.connect();
                 connection.getResponseCode();
+                int deletedCount = chatDBlocal.delete("likes", "post_id = " + postId + " AND user = '" + username + "'", null);
+                chatDBlocal.execSQL("UPDATE chat SET count = count - '1' WHERE _id = '" + postId +"'");
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             return null;
         }
     }
@@ -280,24 +317,20 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             hm.put("author", cursor.getString(cursor.getColumnIndex("author")));
             hm.put("img", cursor.getString(cursor.getColumnIndex("img")));
             hm.put("text", cursor.getString(cursor.getColumnIndex("text")));
+            hm.put("likes_count", cursor.getInt(cursor.getColumnIndex("count")));
             hm.put("list_author_time", new SimpleDateFormat(
                     "HH:mm - dd.MM.yyyy").format(new Date(cursor
                     .getLong(cursor.getColumnIndex("data")))));
 
-            Cursor mCount = chatDBlocal.rawQuery(
-                    "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
-            mCount.moveToFirst();
-            int count= mCount.getInt(0);
-            mCount.close();
+//            Cursor mCount = chatDBlocal.rawQuery(
+//                    "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
+//            mCount.moveToFirst();
+//            int count = mCount.getInt(0);
+//            mCount.close();
 
-            /*Cursor mLiked = chatDBlocal.rawQuery(
-                    "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString() + "AND user = " + username, null);
-            mLiked.moveToFirst();
-            boolean isLiked = mLiked.getInt(0) > 0;
-            mLiked.close();*/
-
-            feedItems.add(0, new FeedItem(count, false, Integer.valueOf(hm.get("id").toString()),
-                    hm.get("img").toString(), hm.get("author").toString(), hm.get("text").toString()));
+            feedItems.add(0, new FeedItem(Integer.valueOf(hm.get("likes_count").toString()), false,
+                    Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
+                    hm.get("author").toString(), hm.get("text").toString()));
         } while (cursor.moveToNext());
         if (animated) {
             notifyItemRangeInserted(0, feedItems.size());
@@ -320,23 +353,19 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 hm.put("author", cursor.getString(cursor.getColumnIndex("author")));
                 hm.put("img", cursor.getString(cursor.getColumnIndex("img")));
                 hm.put("text", cursor.getString(cursor.getColumnIndex("text")));
+                hm.put("likes_count", cursor.getInt(cursor.getColumnIndex("count")));
                 hm.put("list_author_time", new SimpleDateFormat(
                         "HH:mm - dd.MM.yyyy").format(new Date(cursor
                         .getLong(cursor.getColumnIndex("data")))));
 
-                Cursor mCount = chatDBlocal.rawQuery(
-                        "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
-                mCount.moveToFirst();
-                int count= mCount.getInt(0);
-                mCount.close();
-
-                /*Cursor mLiked = chatDBlocal.rawQuery(
-                        "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString() + "AND user = " + username, null);
-                mLiked.moveToFirst();
-                boolean isLiked = mLiked.getInt(0) > 0;
-                mLiked.close();*/
-
-                feedItems.add(0, new FeedItem(count, false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(), hm.get("author").toString(), hm.get("text").toString()));
+//                Cursor mCount = chatDBlocal.rawQuery(
+//                        "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
+//                mCount.moveToFirst();
+//                int count= mCount.getInt(0);
+//                mCount.close();
+                feedItems.add(0, new FeedItem(Integer.valueOf(hm.get("likes_count").toString()),
+                        false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
+                        hm.get("author").toString(), hm.get("text").toString()));
             } while (cursor.moveToNext());
         }
         if (animated) {
@@ -344,6 +373,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else {
             notifyDataSetChanged();
         }
+        loadLikes();
     }
 
     public void setOnFeedItemClickListener(OnFeedItemClickListener onFeedItemClickListener) {

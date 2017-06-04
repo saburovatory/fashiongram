@@ -50,7 +50,7 @@ public class BackgroundService extends Service {
         chatDBlocal = openOrCreateDatabase("chatDBlocal.db",
                 Context.MODE_PRIVATE, null);
         chatDBlocal
-                .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, data, text, img)");
+                .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, data, text, img, count)");
         chatDBlocal
                 .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id)");
 
@@ -237,6 +237,7 @@ public class BackgroundService extends Service {
                                 new_mess.put("data", jo.getLong("data"));
                                 new_mess.put("text", jo.getString("text"));
                                 new_mess.put("img", jo.getString("img"));
+                                new_mess.put("count", jo.getInt("count"));
                                 // запишем новое сообщение в БД
                                 chatDBlocal.insert("chat", null, new_mess);
                                 new_mess.clear();
@@ -307,7 +308,7 @@ public class BackgroundService extends Service {
                     }
                 }
             }
-        });
+        }, "myThread");
 
         thr.setDaemon(true);
         thr.start();
