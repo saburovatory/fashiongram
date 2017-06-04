@@ -52,7 +52,7 @@ public class BackgroundService extends Service {
         chatDBlocal
                 .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, data, text, img, count)");
         chatDBlocal
-                .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id)");
+                .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id, value)");
 
         // создадим и покажем notification
         // это позволит стать сервису "бессмертным"
@@ -281,6 +281,7 @@ public class BackgroundService extends Service {
                                 new_mess = new ContentValues();
                                 new_mess.put("user", jo.getString("user"));
                                 new_mess.put("post_id", jo.getInt("post_id"));
+                                new_mess.put("value", jo.getInt("value"));
                                 // запишем новое сообщение в БД
                                 chatDBlocal.insert("likes", null, new_mess);
                                 new_mess.clear();

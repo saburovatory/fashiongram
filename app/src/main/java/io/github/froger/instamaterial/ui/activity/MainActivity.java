@@ -99,9 +99,6 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
         })) {
             super.onActivityResult(requestCode, resultCode, data);
         }
-//        String username = ((InstaMaterialApplication)getApplication()).getUser();
-//        feedAdapter.setUsername(username);
-//        feedAdapter.loadLikes();
     }
 
     @Override
@@ -114,7 +111,7 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
         chatDBlocal
                 .execSQL("CREATE TABLE IF NOT EXISTS chat (_id integer primary key autoincrement, author, client, data, text, img, count)");
         chatDBlocal
-                .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id)");
+                .execSQL("CREATE TABLE IF NOT EXISTS likes (_id integer primary key autoincrement, user, post_id, value)");
 
         this.startService(new Intent(this, BackgroundService.class));
 

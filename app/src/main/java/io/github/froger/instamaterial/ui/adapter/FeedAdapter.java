@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -64,7 +63,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public void loadLikes() {
         Cursor likedPhotos = chatDBlocal.rawQuery("SELECT DISTINCT post_id FROM likes WHERE user = '"
-                + username + "'", null);
+                + username + "' AND value = 1", null);
         if (likedPhotos == null)
             return;
         likedPhotos.moveToFirst();
@@ -72,12 +71,28 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             for (int i = 0; i < feedItems.size(); i++)
                 if (feedItems.get(i).id == likedPhotos.getInt(0)) {
                     feedItems.get(i).isLiked = true;
-                    notifyItemChanged(i, ACTION_LIKE_BUTTON_CLICKED);
+                    notifyItemChanged(i, new Object());
                     break;
                 }
             likedPhotos.moveToNext();
         }
         likedPhotos.close();
+
+        Cursor dislikedPhotos = chatDBlocal.rawQuery("SELECT DISTINCT post_id FROM likes WHERE user = '"
+                + username + "' AND value = -1", null);
+        if (dislikedPhotos == null)
+            return;
+        dislikedPhotos.moveToFirst();
+        for (int j = 0; j < dislikedPhotos.getCount(); j++) {
+            for (int i = 0; i < feedItems.size(); i++)
+                if (feedItems.get(i).id == dislikedPhotos.getInt(0)) {
+                    feedItems.get(i).isDisliked = true;
+                    notifyItemChanged(i, new Object());
+                    break;
+                }
+            dislikedPhotos.moveToNext();
+        }
+        dislikedPhotos.close();
     }
 
     private class LikeAddition extends AsyncTask<Void, Void, Void> {
@@ -113,6 +128,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 ContentValues new_mess = new ContentValues();
                 new_mess.put("user", username);
                 new_mess.put("post_id", postId);
+                new_mess.put("value", 1);
                 chatDBlocal.insert("likes", null, new_mess);
                 new_mess.clear();
                 chatDBlocal.execSQL("UPDATE chat SET count = count + '1' WHERE _id = '" + postId +"'");
@@ -145,6 +161,45 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         protected Void doInBackground(Void... urls) {
             try {
                 URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
+                        "chat.php?action=delete_like" +
+                        "&post_id=" + postId +
+                        "&user=" + username);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(10000); // ждем 10сек
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                connection.connect();
+                connection.getResponseCode();
+                chatDBlocal.delete("likes", "post_id = " + postId + " AND user = '" + username + "'", null);
+                chatDBlocal.execSQL("UPDATE chat SET count = count - '1' WHERE _id = '" + postId +"'");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+    }
+
+    private class DislikeAddition extends AsyncTask<Void, Void, Void> {
+        String username;
+        int postId;
+
+        DislikeAddition(String username, int postId) {
+            this.username = username;
+            this.postId = postId;
+        }
+
+        DislikeAddition(int postId) {
+            if (context instanceof MainActivity) {
+                InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
+                this.username = myApp.getUser();
+            }
+            this.postId = postId;
+        }
+
+        protected Void doInBackground(Void... urls) {
+            try {
+                URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
                         "chat.php?action=dislike" +
                         "&post_id=" + postId +
                         "&user=" + username);
@@ -154,14 +209,60 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                 connection.connect();
                 connection.getResponseCode();
-                int deletedCount = chatDBlocal.delete("likes", "post_id = " + postId + " AND user = '" + username + "'", null);
+
+                ContentValues new_mess = new ContentValues();
+                new_mess.put("user", username);
+                new_mess.put("post_id", postId);
+                new_mess.put("value", -1);
+                chatDBlocal.insert("likes", null, new_mess);
+                new_mess.clear();
                 chatDBlocal.execSQL("UPDATE chat SET count = count - '1' WHERE _id = '" + postId +"'");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             return null;
         }
+    }
+
+    private class DislikeDeletion extends AsyncTask<Void, Void, Void> {
+        String username;
+        int postId;
+
+        DislikeDeletion(String username, int postId) {
+            this.username = username;
+            this.postId = postId;
+        }
+
+        DislikeDeletion(int postId) {
+            if (context instanceof MainActivity) {
+                InstaMaterialApplication myApp = (InstaMaterialApplication) ((MainActivity) context).getApplication();
+                this.username = myApp.getUser();
+            }
+            this.postId = postId;
+        }
+
+        protected Void doInBackground(Void... urls) {
+            try {
+                URL url = new URL("http://u0306965.plsk.regruhosting.ru/" +
+                        "chat.php?action=delete_dislike" +
+                        "&post_id=" + postId +
+                        "&user=" + username);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(10000); // ждем 10сек
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                connection.connect();
+                connection.getResponseCode();
+
+                chatDBlocal.delete("likes", "post_id = " + postId + " AND user = '" + username + "'", null);
+                chatDBlocal.execSQL("UPDATE chat SET count = count + '1' WHERE _id = '" + postId +"'");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+
+        }
+
     }
 
     @Override
@@ -187,6 +288,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         FeedItem item = feedItems.get(adapterPosition);
         String username = ((InstaMaterialApplication)((MainActivity)this.context).getApplication())
                 .getUser();
+        if (item.isDisliked)
+            return;
         if (!username.equals("not_login")) {
             if (item.isLiked) {
                 item.isLiked = false;
@@ -198,6 +301,30 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 item.likesCount++;
             }
             notifyItemChanged(adapterPosition, action);
+        }
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).showLikedSnackbar();
+        }
+    }
+
+    private void dislike(CellFeedViewHolder holder, String action) {
+        int adapterPosition = holder.getAdapterPosition();
+        FeedItem item = feedItems.get(adapterPosition);
+        String username = ((InstaMaterialApplication)((MainActivity)this.context).getApplication())
+                .getUser();
+        if (item.isLiked)
+            return;
+        if (!username.equals("not_login")) {
+            if (item.isDisliked) {
+                item.isDisliked = false;
+                new DislikeDeletion(username, item.id).execute();
+                item.likesCount++;
+            } else {
+                item.isDisliked = true;
+                new DislikeAddition(username, item.id).execute();
+                item.likesCount--;
+            }
+            notifyItemChanged(adapterPosition, new Object());
         }
         if (context instanceof MainActivity) {
             ((MainActivity) context).showLikedSnackbar();
@@ -232,13 +359,19 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         cellFeedViewHolder.ivFeedCenter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                like(cellFeedViewHolder, ACTION_LIKE_IMAGE_CLICKED);
+            like(cellFeedViewHolder, ACTION_LIKE_IMAGE_CLICKED);
             }
         });
         cellFeedViewHolder.btnLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                like(cellFeedViewHolder, ACTION_LIKE_BUTTON_CLICKED);
+            like(cellFeedViewHolder, ACTION_LIKE_BUTTON_CLICKED);
+            }
+        });
+        cellFeedViewHolder.btnDislike.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dislike(cellFeedViewHolder, ACTION_LIKE_BUTTON_CLICKED);
             }
         });
         cellFeedViewHolder.ivUserProfile.setOnClickListener(new View.OnClickListener() {
@@ -248,6 +381,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         });
     }
+
+
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
@@ -321,15 +456,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             hm.put("list_author_time", new SimpleDateFormat(
                     "HH:mm - dd.MM.yyyy").format(new Date(cursor
                     .getLong(cursor.getColumnIndex("data")))));
-
-//            Cursor mCount = chatDBlocal.rawQuery(
-//                    "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
-//            mCount.moveToFirst();
-//            int count = mCount.getInt(0);
-//            mCount.close();
-
             feedItems.add(0, new FeedItem(Integer.valueOf(hm.get("likes_count").toString()), false,
-                    Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
+                    false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
                     hm.get("author").toString(), hm.get("text").toString()));
         } while (cursor.moveToNext());
         if (animated) {
@@ -357,14 +485,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 hm.put("list_author_time", new SimpleDateFormat(
                         "HH:mm - dd.MM.yyyy").format(new Date(cursor
                         .getLong(cursor.getColumnIndex("data")))));
-
-//                Cursor mCount = chatDBlocal.rawQuery(
-//                        "SELECT count(*) FROM likes WHERE post_id = " + hm.get("id").toString(), null);
-//                mCount.moveToFirst();
-//                int count= mCount.getInt(0);
-//                mCount.close();
                 feedItems.add(0, new FeedItem(Integer.valueOf(hm.get("likes_count").toString()),
-                        false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
+                        false, false, Integer.valueOf(hm.get("id").toString()), hm.get("img").toString(),
                         hm.get("author").toString(), hm.get("text").toString()));
             } while (cursor.moveToNext());
         }
@@ -385,7 +507,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         notifyItemChanged(0);
     }
 
-    public static class CellFeedViewHolder extends RecyclerView.ViewHolder {
+    static class CellFeedViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.ivFeedCenter)
         ImageView ivFeedCenter;
         @BindView(R.id.tvFeedBottom)
@@ -394,6 +516,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ImageButton btnComments;
         @BindView(R.id.btnLike)
         ImageButton btnLike;
+        @BindView(R.id.btnDislike)
+        ImageButton btnDislike;
         @BindView(R.id.btnMore)
         ImageButton btnMore;
         @BindView(R.id.vBgLike)
@@ -441,29 +565,28 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-
-
         public void bindView(FeedItem feedItem) {
             this.feedItem = feedItem;
             new DownloadImageTask(ivFeedCenter).execute("http://u0306965.plsk.regruhosting.ru" + feedItem.path);
             tvAuthor.setText(feedItem.author);
             tvFeedBottom.setText(feedItem.text);
             btnLike.setImageResource(feedItem.isLiked ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline_grey);
+            btnDislike.setImageResource(feedItem.isDisliked ? R.drawable.ic_minus_red : R.drawable.ic_minus_outline_grey);
             tsLikesCounter.setCurrentText(vImageRoot.getResources().getQuantityString(
                     R.plurals.likes_count, feedItem.likesCount, feedItem.likesCount
             ));
         }
 
-        public FeedItem getFeedItem() {
+        FeedItem getFeedItem() {
             return feedItem;
         }
     }
 
-    public static class LoadingCellFeedViewHolder extends CellFeedViewHolder {
+    private static class LoadingCellFeedViewHolder extends CellFeedViewHolder {
 
         LoadingFeedItemView loadingFeedItemView;
 
-        public LoadingCellFeedViewHolder(LoadingFeedItemView view) {
+        LoadingCellFeedViewHolder(LoadingFeedItemView view) {
             super(view);
             this.loadingFeedItemView = view;
         }
@@ -474,15 +597,17 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    public static class FeedItem {
-        public int likesCount;
-        public boolean isLiked;
+    static class FeedItem {
+        int likesCount;
+        boolean isLiked;
+        boolean isDisliked;
         public int id;
-        public String path;
-        public String author;
-        public String text;
+        String path;
+        String author;
+        private String text;
 
-        public FeedItem(int likesCount, boolean isLiked, int id, String path, String author, String text) {
+
+        FeedItem(int likesCount, boolean isLiked, boolean isDisliked, int id, String path, String author, String text) {
             this.likesCount = likesCount;
             this.isLiked = isLiked;
             this.path = path;
