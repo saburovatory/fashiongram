@@ -88,6 +88,13 @@
                 android:src="@drawable/ic_heart_outline_grey" />
 
             <ImageButton
+                android:id="@+id/btnDislike"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_minus_outline_grey" />
+
+            <ImageButton
                 android:id="@+id/btnComments"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
