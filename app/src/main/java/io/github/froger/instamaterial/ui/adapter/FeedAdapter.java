@@ -291,6 +291,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (item.isDisliked)
             return;
         if (!username.equals("not_login")) {
+            item.oldlikesCount = item.likesCount;
             if (item.isLiked) {
                 item.isLiked = false;
                 new LikeDeletion(username, item.id).execute();
@@ -315,6 +316,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (item.isLiked)
             return;
         if (!username.equals("not_login")) {
+            item.oldlikesCount = item.likesCount;
             if (item.isDisliked) {
                 item.isDisliked = false;
                 new DislikeDeletion(username, item.id).execute();
@@ -324,10 +326,10 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 new DislikeAddition(username, item.id).execute();
                 item.likesCount--;
             }
-            notifyItemChanged(adapterPosition, new Object());
+            notifyItemChanged(adapterPosition, action);
         }
         if (context instanceof MainActivity) {
-            ((MainActivity) context).showLikedSnackbar();
+            ((MainActivity) context).showDislikedSnackbar();
         }
     }
 
@@ -599,6 +601,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class FeedItem {
         int likesCount;
+        int oldlikesCount;
         boolean isLiked;
         boolean isDisliked;
         public int id;

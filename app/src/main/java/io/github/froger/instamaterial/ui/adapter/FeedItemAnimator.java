@@ -5,12 +5,14 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.ImageButton;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +92,8 @@ public class FeedItemAnimator extends DefaultItemAnimator {
         if (preInfo instanceof FeedItemHolderInfo) {
             FeedItemHolderInfo feedItemHolderInfo = (FeedItemHolderInfo) preInfo;
             FeedAdapter.CellFeedViewHolder holder = (FeedAdapter.CellFeedViewHolder) newHolder;
+            FeedAdapter.CellFeedViewHolder old_holder = (FeedAdapter.CellFeedViewHolder) oldHolder;
+
 
             animateHeartButton(holder);
             updateLikesCounter(holder, holder.getFeedItem().likesCount);
@@ -113,15 +117,22 @@ public class FeedItemAnimator extends DefaultItemAnimator {
     private void animateHeartButton(final FeedAdapter.CellFeedViewHolder holder) {
         AnimatorSet animatorSet = new AnimatorSet();
 
-        ObjectAnimator rotationAnim = ObjectAnimator.ofFloat(holder.btnLike, "rotation", 0f, 360f);
+        ImageButton btn;
+
+        if (holder.feedItem.isLiked || (!holder.feedItem.isLiked && !holder.feedItem.isDisliked && holder.feedItem.likesCount-holder.feedItem.oldlikesCount < 0))
+            btn = holder.btnLike;
+        else
+            btn = holder.btnDislike;
+
+        ObjectAnimator rotationAnim = ObjectAnimator.ofFloat(btn, "rotation", 0f, 180f);
         rotationAnim.setDuration(300);
         rotationAnim.setInterpolator(ACCELERATE_INTERPOLATOR);
 
-        ObjectAnimator bounceAnimX = ObjectAnimator.ofFloat(holder.btnLike, "scaleX", 0.2f, 1f);
+        ObjectAnimator bounceAnimX = ObjectAnimator.ofFloat(btn, "scaleX", 0.2f, 1f);
         bounceAnimX.setDuration(300);
         bounceAnimX.setInterpolator(OVERSHOOT_INTERPOLATOR);
 
-        ObjectAnimator bounceAnimY = ObjectAnimator.ofFloat(holder.btnLike, "scaleY", 0.2f, 1f);
+        ObjectAnimator bounceAnimY = ObjectAnimator.ofFloat(btn, "scaleY", 0.2f, 1f);
         bounceAnimY.setDuration(300);
         bounceAnimY.setInterpolator(OVERSHOOT_INTERPOLATOR);
         bounceAnimY.addListener(new AnimatorListenerAdapter() {
@@ -131,6 +142,8 @@ public class FeedItemAnimator extends DefaultItemAnimator {
                 dispatchChangeFinishedIfAllAnimationsEnded(holder);
             }
         });
+
+
 
         animatorSet.play(bounceAnimX).with(bounceAnimY).after(rotationAnim);
         animatorSet.start();

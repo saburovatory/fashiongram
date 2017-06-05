@@ -281,4 +281,13 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
         else
             Snackbar.make(clContent, "You are not login!", Snackbar.LENGTH_SHORT).show();
     }
+
+    public void showDislikedSnackbar() {
+        InstaMaterialApplication myApp = (InstaMaterialApplication) getApplication();
+        String username = myApp.getUser();
+        if (!username.equals("not_login"))
+            Snackbar.make(clContent, "Disliked!", Snackbar.LENGTH_SHORT).show();
+        else
+            Snackbar.make(clContent, "You are not login!", Snackbar.LENGTH_SHORT).show();
+    }
 }
