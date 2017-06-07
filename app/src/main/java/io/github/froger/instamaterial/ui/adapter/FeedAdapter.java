@@ -569,7 +569,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         public void bindView(FeedItem feedItem) {
             this.feedItem = feedItem;
-            new DownloadImageTask(ivFeedCenter).execute("http://u0306965.plsk.regruhosting.ru" + feedItem.path);
+            if (ivFeedCenter.getDrawable() == null)
+                new DownloadImageTask(ivFeedCenter).execute("http://u0306965.plsk.regruhosting.ru" + feedItem.path);
             tvAuthor.setText(feedItem.author);
             tvFeedBottom.setText(feedItem.text);
             btnLike.setImageResource(feedItem.isLiked ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline_grey);
@@ -613,6 +614,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         FeedItem(int likesCount, boolean isLiked, boolean isDisliked, int id, String path, String author, String text) {
             this.likesCount = likesCount;
             this.isLiked = isLiked;
+            this.isDisliked = isDisliked;
             this.path = path;
             this.author = author;
             this.text = text;
