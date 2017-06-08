@@ -1,12 +1,17 @@
 package io.github.froger.instamaterial;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Notification;
@@ -294,6 +299,13 @@ public class BackgroundService extends Service {
                                     "+ BackgroundService ---------- ошибка ответа сервера:\n"
                                             + e.getMessage());
                         }
+                        HashMap<Integer, Integer> counts = getCounts();
+                        ContentValues values = new ContentValues();
+                        for (Integer id: counts.keySet()) {
+                            values.clear();
+                            values.put("count", counts.get(id));
+                            chatDBlocal.update("chat", values, "_id = " + id, null);
+                        }
                     } else {
                         // если ответ сервера пустой
                         Log.i("chat",
@@ -315,4 +327,49 @@ public class BackgroundService extends Service {
         thr.start();
 
     }
+
+    private HashMap<Integer, Integer> getCounts() {
+        String link = server_name + "/chat.php?action=select_counts";
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection) new URL(link).openConnection();
+            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(15000);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            connection.setDoInput(true);
+            connection.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String answer = "";
+        try {
+            InputStream stream = conn.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+            answer = builder.toString();
+            answer = answer.substring(0, answer.indexOf("]") + 1);
+            stream.close();
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HashMap<Integer, Integer> counts = new HashMap<>();
+        try {
+            JSONArray array = new JSONArray(answer);
+            JSONObject object;
+            for (int i = 0; i < array.length(); i++) {
+                object = array.getJSONObject(i);
+                counts.put(object.getInt("_id"), object.getInt("count"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return counts;
+    }
+
 }
