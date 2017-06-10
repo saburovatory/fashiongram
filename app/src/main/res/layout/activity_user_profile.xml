@@ -80,7 +80,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="\@jsmith"
                                 android:textColor="#bbbbbb"
-                                android:textSize="12sp" />
+                                android:textSize="12sp"
+                                android:visibility="invisible" />
 
                             <TextView
                                 android:layout_width="match_parent"
@@ -98,7 +99,8 @@
                                 android:background="@drawable/btn_following"
                                 android:text="following"
                                 android:textColor="#ffffff"
-                                android:textSize="12sp" />
+                                android:textSize="12sp"
+                                android:visibility="invisible" />
 
                         </LinearLayout>
                     </LinearLayout>
@@ -109,7 +111,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="16dp"
                         android:layout_marginRight="16dp"
-                        android:layout_marginTop="16dp">
+                        android:layout_marginTop="16dp"
+                        android:visibility="invisible" >
 
                         <LinearLayout
                             android:layout_width="wrap_content"
