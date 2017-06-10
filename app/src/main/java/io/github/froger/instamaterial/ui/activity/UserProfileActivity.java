@@ -12,10 +12,12 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
 import butterknife.BindView;
+import io.github.froger.instamaterial.InstaMaterialApplication;
 import io.github.froger.instamaterial.R;
 import io.github.froger.instamaterial.ui.adapter.UserProfileAdapter;
 import io.github.froger.instamaterial.ui.utils.CircleTransformation;
@@ -49,6 +51,11 @@ public class UserProfileActivity extends BaseDrawerActivity implements RevealBac
     @BindView(R.id.vUserProfileRoot)
     View vUserProfileRoot;
 
+    @BindView(R.id.profileUsername)
+    TextView tvUsername;
+    @BindView(R.id.profileFullName)
+    TextView tvFullName;
+
     private int avatarSize;
     private String profilePhoto;
     private UserProfileAdapter userPhotosAdapter;
@@ -66,7 +73,9 @@ public class UserProfileActivity extends BaseDrawerActivity implements RevealBac
 
         this.avatarSize = getResources().getDimensionPixelSize(R.dimen.user_profile_avatar_size);
         this.profilePhoto = getString(R.string.user_profile_photo);
-
+        InstaMaterialApplication myApp = (InstaMaterialApplication) getApplication();
+        tvUsername.setText(myApp.getUser());
+        tvFullName.setText("@" + myApp.getFullName());
         Picasso.with(this)
                 .load(profilePhoto)
                 .placeholder(R.drawable.img_circle_placeholder)

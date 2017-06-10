@@ -8,6 +8,7 @@ import timber.log.Timber;
 
 public class InstaMaterialApplication extends Application {
     private String user;
+    private String fullName;
 
     public void setUser(String user) {
         this.user = user;
@@ -15,6 +16,14 @@ public class InstaMaterialApplication extends Application {
 
     public String getUser() {
         return this.user;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     @Override

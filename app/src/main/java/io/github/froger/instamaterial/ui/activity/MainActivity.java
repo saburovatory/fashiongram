@@ -86,6 +86,7 @@ public class MainActivity extends BaseDrawerActivity implements FeedAdapter.OnFe
                             e.printStackTrace();
                         }
                         myApp.setUser(screen_name);
+                        myApp.setFullName(first_name + " " + last_name);
                         feedAdapter.setUsername(screen_name);
                         feedAdapter.loadLikes();
                     }

@@ -69,19 +69,19 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/profileFullName"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="John Smith"
                                 android:textColor="#ffffff"
                                 android:textSize="24sp" />
 
                             <TextView
+                                android:id="@+id/profileUsername"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="\@jsmith"
                                 android:textColor="#bbbbbb"
                                 android:textSize="12sp"
-                                android:visibility="invisible" />
+                                android:visibility="visible" />
 
                             <TextView
                                 android:layout_width="match_parent"
